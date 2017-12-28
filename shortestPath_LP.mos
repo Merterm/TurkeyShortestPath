@@ -1,0 +1,52 @@
+!@encoding CP1254
+model ModelName
+uses "mmxprs"; !gain access to the Xpress-Optimizer solver
+
+!optional parameters section
+parameters
+!  SAMPLEPARAM1='c:\test\'
+!  SAMPLEPARAM2=false
+   PROJECTDIR='' ! for when file is added to project
+end-parameters
+
+n:= 81
+!sample declarations section
+declarations
+! ...
+	test : array(1..n) of set of integer
+	x: array(1..n,1..n) of mpvar
+  	d : array(1..n, 1..n) of integer
+  	constr: array(1..n) of linctr
+  	obj_fnc: linctr
+end-declarations
+
+!test:= {1, 2, 3, 4}
+
+initializations from "mmsheet.excel:city_distance.xls"
+	d as "noindex;[Sheet1$A1:CC81]"
+	!test as "noindex;[Sheet1$A1:A81]"
+end-initializations
+	
+forall(i in 1..81) do
+	if( i == 34) then
+	constr(i):= sum(j in adj(i))x(i,j)-sum(j in adj(i))x(j,i) = 80
+	else
+	constr(i):= sum(j in adj(i))x(i,j)-sum(j in adj(i))x(j,i) = -1
+	end-if
+end-do
+
+obj_fnc := sum(m in 1..81, r in 1..81)d(i,j)*x(i,j)
+
+minimize(obj_fnc)
+
+if PROJECTDIR <> '' then
+  setparam('workdir', PROJECTDIR)
+  writeln("Project directory: " + PROJECTDIR)
+end-if
+
+writeln("Begin running model", city_distances)
+!...
+writeln("Optimal distance is: ", getobjval)
+writeln("End running model")
+
+end-model
